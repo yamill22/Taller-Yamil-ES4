@@ -4,7 +4,7 @@ import PokemonCard from './components/PokemonCard';
 import SearchBar from './components/SearchBar';
 import FavoritesSidebar from './components/FavoritesSidebar';
 import BlockedManager from './components/BlockedManager';
-import { useLocalStorage } from './hooks/useLocalStorage'; // <-- Importamos tu nuevo Custom Hook
+import { useLocalStorage } from './hooks/useLocalStorage'; 
 
 function App() {
   const [pokemonList, setPokemonList] = useState([]);
