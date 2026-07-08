@@ -183,6 +183,18 @@ function App() {
         onUnblockAll={handleUnblockAll}
       />
 
+      <footer className="max-w-7xl mx-auto border-t border-purple-200 mt-12 py-6 text-center text-xs text-purple-500 font-medium tracking-wide">
+        <p className="mb-2 text-purple-700 font-bold">Desarrollado por:</p>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 px-4">
+          <span className="bg-purple-200/50 text-purple-900 px-3 py-1 rounded-full border border-purple-300/30 font-bold">
+            Yamil Nayen
+          </span>
+        </div>
+        <p className="mt-4 text-[10px] text-purple-400 font-mono">
+          © 2026 INACAP Antofagasta · Analista Programador
+        </p>
+      </footer>
+
     </div>
   );
 }
