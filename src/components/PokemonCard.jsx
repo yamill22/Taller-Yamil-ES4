@@ -1,6 +1,6 @@
 import React from 'react';
 
-function PokemonCard({ pokemon }) {
+function PokemonCard({ pokemon, isFavorite, onToggleFavorite }) {
   const pokemonId = pokemon.url.split('/')[6];
   const imageUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`;
 
@@ -16,7 +16,7 @@ function PokemonCard({ pokemon }) {
         />
       </div>
 
-      <div className="text-center">
+      <div className="text-center mb-4">
         <h3 className="text-base font-bold text-purple-900 capitalize tracking-wide">
           {pokemon.name}
         </h3>
@@ -24,6 +24,18 @@ function PokemonCard({ pokemon }) {
           #{pokemonId.padStart(3, '0')}
         </span>
       </div>
+
+      <button
+        onClick={() => onToggleFavorite(pokemon)}
+        className={`w-full py-2 px-4 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-sm ${
+          isFavorite
+            ? 'bg-yellow-400 text-yellow-950 hover:bg-yellow-300'
+            : 'bg-purple-100 text-purple-700 hover:bg-purple-200/80 border border-purple-300/40'
+        }`}
+      >
+        <span>{isFavorite ? '★' : '☆'}</span>
+        <span>{isFavorite ? 'Favorito' : 'Guardar'}</span>
+      </button>
 
     </div>
   );

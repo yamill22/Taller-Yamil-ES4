@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from './data/pokemonData';
 import PokemonCard from './components/PokemonCard';
-import SearchBar from './components/SearchBar'; 
+import SearchBar from './components/SearchBar';
+import FavoritesSidebar from './components/FavoritesSidebar'; 
 
 function App() {
   const [pokemonList, setPokemonList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
   const [searchTerm, setSearchTerm] = useState("");
+
+  const [favorites, setFavorites] = useState(() => {
+    const savedFavorites = localStorage.getItem('pokedex-favorites');
+    return savedFavorites ? JSON.parse(savedFavorites) : [];
+  });
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchPokemons = async () => {
@@ -32,13 +39,43 @@ function App() {
     fetchPokemons();
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('pokedex-favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const handleToggleFavorite = (pokemon) => {
+    const isAlreadyFav = favorites.some((fav) => fav.name === pokemon.name);
+    if (isAlreadyFav) {
+      setFavorites(favorites.filter((fav) => fav.name !== pokemon.name));
+    } else {
+      setFavorites([...favorites, pokemon]);
+    }
+  };
+
+  const handleRemoveFavorite = (pokemon) => {
+    setFavorites(favorites.filter((fav) => fav.name !== pokemon.name));
+  };
+
   const filteredPokemons = pokemonList.filter((pokemon) =>
     pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="min-h-screen bg-purple-100 text-purple-950 p-6 font-sans">
+    <div className="min-h-screen bg-purple-100 text-purple-950 p-6 font-sans relative">
       
+      <button
+        onClick={() => setIsSidebarOpen(true)}
+        className="fixed bottom-6 right-6 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg z-30 transition-transform hover:scale-110 flex items-center justify-center cursor-pointer"
+        title="Ver Favoritos"
+      >
+        <span className="text-xl">⭐</span>
+        {favorites.length > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-black rounded-full w-6 h-6 flex items-center justify-center border-2 border-purple-100 animate-bounce">
+            {favorites.length}
+          </span>
+        )}
+      </button>
+
       <header className="max-w-7xl mx-auto text-center pb-6 mb-6 border-b border-purple-200">
         <h1 className="text-4xl font-extrabold tracking-tight text-purple-900">
           Pokédex
@@ -81,15 +118,32 @@ function App() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 bg-purple-50/50 p-6 rounded-2xl border border-purple-200/60">
-                {filteredPokemons.map((pokemon) => (
-                  <PokemonCard key={pokemon.name} pokemon={pokemon} />
-                ))}
+                {filteredPokemons.map((pokemon) => {
+                  const isFav = favorites.some((fav) => fav.name === pokemon.name);
+                  
+                  return (
+                    <PokemonCard 
+                      key={pokemon.name} 
+                      pokemon={pokemon} 
+                      isFavorite={isFav}
+                      onToggleFavorite={handleToggleFavorite}
+                    />
+                  );
+                })}
               </div>
             )}
           </>
         )}
 
       </main>
+
+      <FavoritesSidebar 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        favorites={favorites}
+        onRemoveFavorite={handleRemoveFavorite}
+      />
+
     </div>
   );
 }
