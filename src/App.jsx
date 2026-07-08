@@ -4,6 +4,7 @@ import PokemonCard from './components/PokemonCard';
 import SearchBar from './components/SearchBar';
 import FavoritesSidebar from './components/FavoritesSidebar';
 import BlockedManager from './components/BlockedManager';
+import { useLocalStorage } from './hooks/useLocalStorage'; // <-- Importamos tu nuevo Custom Hook
 
 function App() {
   const [pokemonList, setPokemonList] = useState([]);
@@ -11,16 +12,10 @@ function App() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [favorites, setFavorites] = useState(() => {
-    const savedFavorites = localStorage.getItem('pokedex-favorites');
-    return savedFavorites ? JSON.parse(savedFavorites) : [];
-  });
+  const [favorites, setFavorites] = useLocalStorage('pokedex-favorites', []);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const [blocked, setBlocked] = useState(() => {
-    const savedBlocked = localStorage.getItem('pokedex-blocked');
-    return savedBlocked ? JSON.parse(savedBlocked) : [];
-  });
+  const [blocked, setBlocked] = useLocalStorage('pokedex-blocked', []);
   const [isBlockedOpen, setIsBlockedOpen] = useState(false);
 
   useEffect(() => {
@@ -42,14 +37,6 @@ function App() {
     fetchPokemons();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('pokedex-favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
-  useEffect(() => {
-    localStorage.setItem('pokedex-blocked', JSON.stringify(blocked));
-  }, [blocked]);
-
   const handleToggleFavorite = (pokemon) => {
     const isAlreadyFav = favorites.some((fav) => fav.name === pokemon.name);
     if (isAlreadyFav) {
@@ -65,7 +52,7 @@ function App() {
 
   const handleBlockPokemon = (name) => {
     setBlocked([...blocked, name]);
-    setFavorites(favorites.filter((fav) => fav.name !== name)); 
+    setFavorites(favorites.filter((fav) => fav.name !== name));
   };
 
   const handleUnblockPokemon = (name) => {
