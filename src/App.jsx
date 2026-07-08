@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { API_URL } from './data/pokemonData';
 import PokemonCard from './components/PokemonCard';
 import SearchBar from './components/SearchBar';
-import FavoritesSidebar from './components/FavoritesSidebar'; 
+import FavoritesSidebar from './components/FavoritesSidebar';
+import BlockedManager from './components/BlockedManager';
 
 function App() {
   const [pokemonList, setPokemonList] = useState([]);
@@ -14,19 +15,22 @@ function App() {
     const savedFavorites = localStorage.getItem('pokedex-favorites');
     return savedFavorites ? JSON.parse(savedFavorites) : [];
   });
-
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const [blocked, setBlocked] = useState(() => {
+    const savedBlocked = localStorage.getItem('pokedex-blocked');
+    return savedBlocked ? JSON.parse(savedBlocked) : [];
+  });
+  const [isBlockedOpen, setIsBlockedOpen] = useState(false);
 
   useEffect(() => {
     const fetchPokemons = async () => {
       try {
         setLoading(true);
         const respuesta = await fetch(API_URL);
-        
         if (!respuesta.ok) {
           throw new Error('No se pudo conectar con la PokéAPI.');
         }
-
         const datos = await respuesta.json();
         setPokemonList(datos.results);
       } catch (err) {
@@ -35,13 +39,16 @@ function App() {
         setLoading(false);
       }
     };
-
     fetchPokemons();
   }, []);
 
   useEffect(() => {
     localStorage.setItem('pokedex-favorites', JSON.stringify(favorites));
   }, [favorites]);
+
+  useEffect(() => {
+    localStorage.setItem('pokedex-blocked', JSON.stringify(blocked));
+  }, [blocked]);
 
   const handleToggleFavorite = (pokemon) => {
     const isAlreadyFav = favorites.some((fav) => fav.name === pokemon.name);
@@ -56,9 +63,23 @@ function App() {
     setFavorites(favorites.filter((fav) => fav.name !== pokemon.name));
   };
 
-  const filteredPokemons = pokemonList.filter((pokemon) =>
-    pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleBlockPokemon = (name) => {
+    setBlocked([...blocked, name]);
+    setFavorites(favorites.filter((fav) => fav.name !== name)); 
+  };
+
+  const handleUnblockPokemon = (name) => {
+    setBlocked(blocked.filter((item) => item !== name));
+  };
+
+  const handleUnblockAll = () => {
+    setBlocked([]);
+    setIsBlockedOpen(false);
+  };
+
+  const filteredPokemons = pokemonList
+    .filter((pokemon) => pokemon.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((pokemon) => !blocked.includes(pokemon.name));
 
   return (
     <div className="min-h-screen bg-purple-100 text-purple-950 p-6 font-sans relative">
@@ -66,7 +87,6 @@ function App() {
       <button
         onClick={() => setIsSidebarOpen(true)}
         className="fixed bottom-6 right-6 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg z-30 transition-transform hover:scale-110 flex items-center justify-center cursor-pointer"
-        title="Ver Favoritos"
       >
         <span className="text-xl">⭐</span>
         {favorites.length > 0 && (
@@ -83,6 +103,20 @@ function App() {
         <p className="text-purple-600 text-sm mt-1 font-medium tracking-wide">
           Busca, guarda y elimina a tu Pokémon favorito
         </p>
+
+        {blocked.length > 0 && (
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <span className="text-xs bg-red-100 text-red-800 font-bold px-3 py-1 rounded-full border border-red-200">
+              🚫 {blocked.length} ocultos
+            </span>
+            <button
+              onClick={() => setIsBlockedOpen(true)}
+              className="text-xs bg-purple-200 hover:bg-purple-300 text-purple-800 font-bold px-3 py-1 rounded-full transition-colors cursor-pointer"
+            >
+              Gestionar Bloqueados
+            </button>
+          </div>
+        )}
       </header>
 
       <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
@@ -113,20 +147,30 @@ function App() {
             {filteredPokemons.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-purple-500 font-medium text-lg">
-                  No se encontraron Pokémon que coincidan con "{searchTerm}"
+                  {searchTerm 
+                    ? `No se encontraron Pokémon que coincidan con "${searchTerm}"`
+                    : "Todos los Pokémon de la lista han sido bloqueados."}
                 </p>
+                {blocked.length > 0 && !searchTerm && (
+                  <button
+                    onClick={() => setIsBlockedOpen(true)}
+                    className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-full transition-colors shadow-md cursor-pointer text-sm"
+                  >
+                    Gestionar Bloqueados
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 bg-purple-50/50 p-6 rounded-2xl border border-purple-200/60">
                 {filteredPokemons.map((pokemon) => {
                   const isFav = favorites.some((fav) => fav.name === pokemon.name);
-                  
                   return (
                     <PokemonCard 
                       key={pokemon.name} 
                       pokemon={pokemon} 
                       isFavorite={isFav}
                       onToggleFavorite={handleToggleFavorite}
+                      onBlockPokemon={handleBlockPokemon}
                     />
                   );
                 })}
@@ -142,6 +186,14 @@ function App() {
         onClose={() => setIsSidebarOpen(false)}
         favorites={favorites}
         onRemoveFavorite={handleRemoveFavorite}
+      />
+
+      <BlockedManager
+        isOpen={isBlockedOpen}
+        onClose={() => setIsBlockedOpen(false)}
+        blockedList={blocked}
+        onUnblockPokemon={handleUnblockPokemon}
+        onUnblockAll={handleUnblockAll}
       />
 
     </div>
