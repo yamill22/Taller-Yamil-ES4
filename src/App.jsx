@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from './data/pokemonData';
 import PokemonCard from './components/PokemonCard';
+import SearchBar from './components/SearchBar'; 
 
 function App() {
   const [pokemonList, setPokemonList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchPokemons = async () => {
@@ -29,10 +32,14 @@ function App() {
     fetchPokemons();
   }, []);
 
+  const filteredPokemons = pokemonList.filter((pokemon) =>
+    pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-purple-100 text-purple-950 p-6 font-sans">
       
-      <header className="max-w-7xl mx-auto text-center pb-6 mb-8 border-b border-purple-200">
+      <header className="max-w-7xl mx-auto text-center pb-6 mb-6 border-b border-purple-200">
         <h1 className="text-4xl font-extrabold tracking-tight text-purple-900">
           Pokédex
         </h1>
@@ -41,19 +48,18 @@ function App() {
         </p>
       </header>
 
+      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+
       <main className="max-w-7xl mx-auto">
         
         {loading && (
           <div className="flex flex-col items-center justify-center py-32 gap-6">
-            
             <div className="relative w-16 h-16 bg-white rounded-full border-4 border-purple-950 overflow-hidden animate-spin shadow-md">
               <div className="absolute top-0 left-0 w-full h-1/2 bg-red-500 border-b-4 border-purple-950"></div>
-              
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-white border-4 border-purple-950 rounded-full z-10"></div>
             </div>
-
             <p className="text-purple-700 font-bold text-sm uppercase tracking-widest animate-pulse font-mono">
-              Cargando Pokédex...
+              Invocando Pokémon...
             </p>
           </div>
         )}
@@ -66,11 +72,21 @@ function App() {
         )}
 
         {!loading && !error && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 bg-purple-50/50 p-6 rounded-2xl border border-purple-200/60">
-            {pokemonList.map((pokemon) => (
-              <PokemonCard key={pokemon.name} pokemon={pokemon} />
-            ))}
-          </div>
+          <>
+            {filteredPokemons.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-purple-500 font-medium text-lg">
+                  No se encontraron Pokémon que coincidan con "{searchTerm}"
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 bg-purple-50/50 p-6 rounded-2xl border border-purple-200/60">
+                {filteredPokemons.map((pokemon) => (
+                  <PokemonCard key={pokemon.name} pokemon={pokemon} />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
       </main>
